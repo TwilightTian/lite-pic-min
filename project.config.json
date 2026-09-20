@@ -2,7 +2,7 @@
   "description": "轻图工具箱：本地图片工具套件",
   "compileType": "miniprogram",
   "projectname": "lite-pic-mini",
-  "appid": "wx816428fdd0e6581c",
+  "appid": "wxa94186b0d9042ff1",
   "libVersion": "3.5.5",
   "setting": {
     "urlCheck": false,
@@ -47,5 +47,6 @@
     ],
     "include": []
   },
-  "editorSetting": {}
+  "editorSetting": {},
+  "isGameTourist": false
 }
