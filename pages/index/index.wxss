@@ -1,0 +1,89 @@
+.page {
+  min-height: 100vh;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.hero {
+  padding: 32rpx 8rpx 40rpx;
+}
+
+.hero-title {
+  font-size: 48rpx;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+}
+
+.hero-desc {
+  margin-top: 12rpx;
+  color: #8a9099;
+  font-size: 26rpx;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24rpx;
+}
+
+.feature {
+  width: calc((100% - 24rpx) / 2);
+  box-sizing: border-box;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 32rpx 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.feature-hover {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.feature-icon {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44rpx;
+  margin-bottom: 20rpx;
+}
+
+.feature-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+}
+
+.feature-desc {
+  font-size: 24rpx;
+  color: #8a9099;
+  line-height: 1.5;
+}
+
+.tips {
+  margin-top: 32rpx;
+}
+
+.tips-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+
+.text-tip + .text-tip {
+  margin-top: 8rpx;
+}
+
+.footer {
+  text-align: center;
+  padding: 24rpx 0 8rpx;
+}
+
+.footer-link {
+  color: #8a9099;
+  font-size: 26rpx;
+  text-decoration: underline;
+}

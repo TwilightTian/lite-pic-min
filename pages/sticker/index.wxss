@@ -1,0 +1,63 @@
+.tip {
+  margin-top: 16rpx;
+}
+
+.edit-canvas {
+  display: block;
+  background: #f4f5f7;
+}
+
+/* 分段切换 */
+.segment {
+  display: flex;
+  background: #f1f2f4;
+  border-radius: 16rpx;
+  padding: 6rpx;
+  margin-bottom: 20rpx;
+}
+
+.segment-item {
+  flex: 1;
+  height: 64rpx;
+  line-height: 64rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #5b6169;
+  border-radius: 12rpx;
+}
+
+.segment-item.active {
+  background: #fff;
+  color: #1f2328;
+  font-weight: 600;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+/* 贴纸库 */
+.sticker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.sticker-cell {
+  width: calc((100% - 48rpx) / 7);
+  height: 84rpx;
+  line-height: 84rpx;
+  text-align: center;
+  font-size: 46rpx;
+  background: #f6f7f9;
+  border-radius: 16rpx;
+}
+
+.sticker-cell:active {
+  background: #e9f9f0;
+}
+
+.action-row {
+  margin-top: 20rpx;
+}
+
+.export-btn {
+  margin-top: 20rpx;
+}

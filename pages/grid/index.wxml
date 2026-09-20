@@ -1,0 +1,73 @@
+<view class="container">
+  <!-- 选图、预览、结果都在这一块里 -->
+  <view class="card">
+    <view wx:if="{{sliced && mode === 'slice'}}" class="view-switch">
+      <view class="view-tab {{showResult ? '' : 'active'}}" bindtap="onShowPreview">原图预览</view>
+      <view class="view-tab {{showResult ? 'active' : ''}}" bindtap="onShowResult">切图结果</view>
+    </view>
+
+    <view class="canvas-wrap" style="height: {{displaySide}}px;" bindtap="onTapStage">
+      <canvas
+        wx:if="{{hasImage}}"
+        type="2d"
+        id="previewCanvas"
+        class="edit-canvas"
+        style="width: {{displaySide}}px; height: {{displaySide}}px;"
+        bindlongpress="onCanvasLongPress"
+      ></canvas>
+      <view wx:elif="{{working}}" class="loading-state">
+        <view class="loading-spinner"></view>
+        <view class="loading-text">正在处理照片…</view>
+      </view>
+      <view wx:else class="empty">
+        <view class="empty-icon">＋</view>
+        <view>点击选择照片</view>
+        <view class="empty-sub">切成 9 张，或加框线做假九宫</view>
+      </view>
+    </view>
+
+    <view wx:if="{{hasImage}}" class="text-tip tip">{{imageTip}}</view>
+    <view wx:else class="text-tip tip">{{advice}}</view>
+    <view wx:if="{{hasImage}}" class="text-tip tip">{{sizeTip}}</view>
+  </view>
+
+  <!-- 操作区常驻 -->
+  <view class="card">
+    <view class="segment">
+      <view
+        class="segment-item {{mode === 'slice' ? 'active' : ''}}"
+        data-mode="slice"
+        bindtap="onSwitchMode"
+      >切成 9 张</view>
+      <view
+        class="segment-item {{mode === 'fake' ? 'active' : ''}}"
+        data-mode="fake"
+        bindtap="onSwitchMode"
+      >假九宫（只加框线）</view>
+    </view>
+
+    <view
+      class="btn btn-primary {{hasImage && !working && !slicing && !saving ? '' : 'btn-disabled'}}"
+      bindtap="onPrimary"
+    >{{mode === 'fake' ? '保存到相册' : '生成九宫格切图'}}</view>
+
+    <view class="btn-row action-row">
+      <view class="btn btn-plain" bindtap="onRepick">{{hasImage ? '换一张照片' : '选择照片'}}</view>
+      <view
+        wx:if="{{mode === 'slice'}}"
+        class="btn btn-plain {{sliced && !saving ? '' : 'btn-disabled'}}"
+        bindtap="onSaveAll"
+      >{{saving ? '保存中…' : '全部保存到相册'}}</view>
+    </view>
+
+    <view wx:if="{{mode === 'fake'}}" class="text-tip tip">
+      假九宫不会真的切图：只把白色的格子线画在照片上，保存下来是一整张。发到朋友圈在九宫格里看像 9 张，点开还是完整的一张。
+    </view>
+    <view wx:elif="{{sliced}}" class="text-tip tip">长按某一格可以只保存这一张。</view>
+  </view>
+
+  <!-- 屏幕外的工作画布：切图导出都在这里画，用户看不到，所以画面不会闪 -->
+  <canvas wx:if="{{hasImage}}" type="2d" id="workCanvas" class="work-canvas"></canvas>
+
+  <view class="safe-bottom" />
+</view>

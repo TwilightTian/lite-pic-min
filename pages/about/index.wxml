@@ -1,0 +1,37 @@
+<view class="container">
+  <view class="card">
+    <view class="card-title">轻图九宫格</view>
+    <view class="row">
+      <text class="row-label">版本</text>
+      <text class="row-value">{{version}}</text>
+    </view>
+    <view class="row">
+      <text class="row-label">功能</text>
+      <text class="row-value">九宫格切图 / 水印 / 贴纸 / 裁剪</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">隐私说明</view>
+    <view class="text-tip">1. 我们不会收集、也不会拿走你的照片和个人信息。</view>
+    <view class="text-tip">2. 你选的照片只在手机本地处理，处理完的临时文件微信会自动清理。</view>
+    <view class="text-tip">3. 只会用到两个系统能力：选照片（相册/相机）和存照片（相册）。</view>
+    <view class="text-tip">4. 不用登录，没有广告，也没有第三方统计。</view>
+    <view class="text-tip">5. 保存出来的照片不会带我们的水印。</view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">权限说明</view>
+    <view class="row">
+      <text class="row-label">保存到相册</text>
+      <text class="row-value">只在保存照片时用到</text>
+    </view>
+    <view class="row">
+      <text class="row-label">选择照片</text>
+      <text class="row-value">只在挑照片时用到</text>
+    </view>
+    <view class="text-tip">如果不小心点了拒绝，可以在小程序右上角菜单的「设置」里重新打开。</view>
+  </view>
+
+  <view class="safe-bottom" />
+</view>

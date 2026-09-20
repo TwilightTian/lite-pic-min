@@ -1,0 +1,207 @@
+<view class="container">
+  <!-- 选图与预览合并：没图时整块可点 -->
+  <view class="card">
+    <view class="canvas-wrap" style="height: {{displayH}}px;" bindtap="onTapStage">
+      <canvas
+        wx:if="{{hasImage}}"
+        type="2d"
+        id="editCanvas"
+        class="edit-canvas"
+        style="width: {{displayW}}px; height: {{displayH}}px;"
+        bindtouchstart="onTouchStart"
+        bindtouchmove="onTouchMove"
+        bindtouchend="onTouchEnd"
+        bindtouchcancel="onTouchEnd"
+      ></canvas>
+      <view wx:elif="{{working}}" class="loading-state">
+        <view class="loading-spinner"></view>
+        <view class="loading-text">正在处理照片…</view>
+      </view>
+      <view wx:else class="empty">
+        <view class="empty-icon">＋</view>
+        <view>点击选择照片</view>
+      </view>
+    </view>
+    <view wx:if="{{hasImage && !wm.tile}}" class="text-tip tip">
+      按住图上的水印可以拖动，两根手指能放大、缩小和转动。
+    </view>
+    <view wx:if="{{hasImage}}" class="text-tip tip">{{imageTip}}</view>
+    <view wx:else class="text-tip tip">{{advice}}</view>
+  </view>
+
+  <!-- 设置常驻，没选图也能先配好 -->
+  <view class="card">
+    <view class="card-title">水印设置</view>
+
+    <view class="segment">
+      <view
+        class="segment-item {{wm.type === 'text' ? 'active' : ''}}"
+        data-type="text"
+        bindtap="onSwitchType"
+      >文字水印</view>
+      <view
+        class="segment-item {{wm.type === 'image' ? 'active' : ''}}"
+        data-type="image"
+        bindtap="onSwitchType"
+      >图片水印</view>
+    </view>
+
+    <!-- 常用：文字水印 -->
+    <block wx:if="{{wm.type === 'text'}}">
+      <input
+        class="text-input"
+        value="{{wm.text}}"
+        placeholder="输入要加的文字"
+        maxlength="30"
+        confirm-type="done"
+        bindinput="onTextInput"
+      />
+      <view class="row">
+        <text class="row-label">颜色</text>
+      </view>
+      <view class="color-row">
+        <view
+          wx:for="{{colors}}"
+          wx:key="*this"
+          class="color-dot {{wm.color === item ? 'active' : ''}}"
+          style="background: {{item}}"
+          data-color="{{item}}"
+          bindtap="onPickColor"
+        />
+      </view>
+      <slider-control
+        label="文字大小"
+        value="{{pct.fontSize}}"
+        min="2"
+        max="20"
+        step="1"
+        unit="%"
+        data-field="fontSize"
+        bindchanging="onSliderChanging"
+        bindchange="onSliderChange"
+      />
+      <view class="switch-row">
+        <text class="row-label">文字加粗</text>
+        <switch checked="{{wm.bold}}" color="#07c160" bindchange="onBoldChange" />
+      </view>
+    </block>
+
+    <!-- 常用：图片水印 -->
+    <block wx:else>
+      <view class="btn-row">
+        <view class="btn btn-plain" bindtap="onChooseWatermark">
+          {{wm.imageSrc ? '换一张水印图' : '选择水印图'}}
+        </view>
+      </view>
+      <view class="text-tip tip" wx:if="{{!wm.imageSrc}}">还没选水印图，选好才会加到照片上。</view>
+      <slider-control
+        label="水印大小"
+        value="{{pct.imageScale}}"
+        min="5"
+        max="80"
+        step="1"
+        unit="%"
+        data-field="imageScale"
+        bindchanging="onSliderChanging"
+        bindchange="onSliderChange"
+      />
+    </block>
+
+    <!-- 常用：透明度 -->
+    <slider-control
+      label="透明度"
+      value="{{pct.opacity}}"
+      min="5"
+      max="100"
+      step="1"
+      unit="%"
+      data-field="opacity"
+      bindchanging="onSliderChanging"
+      bindchange="onSliderChange"
+    />
+
+    <!-- 更多设置 -->
+    <view class="more-toggle" bindtap="onToggleMore">
+      <text class="more-title">更多设置</text>
+      <text class="more-arrow">{{moreOpen ? '收起 ▴' : '展开 ▾'}}</text>
+    </view>
+
+    <block wx:if="{{moreOpen}}">
+      <slider-control
+        label="旋转角度"
+        value="{{wm.rotation}}"
+        min="-180"
+        max="180"
+        step="1"
+        unit="°"
+        data-field="rotation"
+        bindchanging="onSliderChanging"
+        bindchange="onSliderChange"
+      />
+      <slider-control
+        label="离边缘距离"
+        value="{{pct.padding}}"
+        min="0"
+        max="20"
+        step="1"
+        unit="%"
+        data-field="padding"
+        bindchanging="onSliderChanging"
+        bindchange="onSliderChange"
+      />
+
+      <view class="row">
+        <text class="row-label">摆放位置</text>
+        <text class="text-tip">
+          {{wm.tile ? '铺满整张图时不能拖动' : (freeMode ? '当前是手动摆的' : '点下面用固定位置')}}
+        </text>
+      </view>
+      <view class="position-picker">
+        <view
+          wx:for="{{positions}}"
+          wx:key="key"
+          class="position-cell {{!wm.tile && !freeMode && wm.position === item.key ? 'active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="onPickPosition"
+        >
+          <view class="position-dot" />
+        </view>
+      </view>
+      <view wx:if="{{freeMode && !wm.tile}}" class="btn-row reset-row">
+        <view class="btn btn-plain" bindtap="onResetFree">放回固定位置</view>
+      </view>
+
+      <view class="switch-row">
+        <text class="row-label">铺满整张图</text>
+        <switch checked="{{wm.tile}}" color="#07c160" bindchange="onTileChange" />
+      </view>
+      <slider-control
+        wx:if="{{wm.tile}}"
+        label="水印间距"
+        value="{{wm.tileGap}}"
+        min="0.5"
+        max="3"
+        step="0.1"
+        precision="{{1}}"
+        unit=" 倍"
+        data-field="tileGap"
+        bindchanging="onSliderChanging"
+        bindchange="onSliderChange"
+      />
+    </block>
+  </view>
+
+  <!-- 操作按钮常驻 -->
+  <view class="card">
+    <view
+      class="btn btn-primary {{hasImage && !exporting ? '' : 'btn-disabled'}}"
+      bindtap="onExport"
+    >保存到相册</view>
+    <view class="btn-row reset-row">
+      <view class="btn btn-plain" bindtap="onRepick">{{hasImage ? '换一张照片' : '选择照片'}}</view>
+    </view>
+    <view class="text-tip tip">保存下来的照片很干净，没有我们加的水印。</view>
+  </view>
+
+  <view class="safe-bottom" />
+</view>

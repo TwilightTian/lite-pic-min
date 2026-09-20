@@ -1,0 +1,29 @@
+.ctrl {
+  padding: 4rpx 0;
+}
+
+.ctrl-disabled {
+  opacity: 0.45;
+}
+
+.ctrl-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52rpx;
+}
+
+.ctrl-label {
+  font-size: 26rpx;
+  color: #5b6169;
+}
+
+.ctrl-value {
+  font-size: 26rpx;
+  color: #1f2328;
+  font-variant-numeric: tabular-nums;
+}
+
+.ctrl-slider {
+  margin: 0 8rpx;
+}

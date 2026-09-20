@@ -1,0 +1,54 @@
+.tip {
+  margin-top: 16rpx;
+}
+
+.edit-canvas {
+  display: block;
+  background: #f4f5f7;
+}
+
+.ratio-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 12rpx;
+}
+
+.ratio-item {
+  padding: 0 28rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  border-radius: 32rpx;
+  background: #f1f2f4;
+  color: #5b6169;
+  font-size: 26rpx;
+}
+
+.ratio-item.active {
+  background: #07c160;
+  color: #fff;
+}
+
+.reset-row {
+  margin-top: 16rpx;
+}
+
+/* 更多设置 */
+.more-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 88rpx;
+  margin-top: 12rpx;
+  border-top: 2rpx solid #f2f3f5;
+}
+
+.more-title {
+  font-size: 28rpx;
+  color: #1f2328;
+}
+
+.more-arrow {
+  font-size: 26rpx;
+  color: #8a9099;
+}

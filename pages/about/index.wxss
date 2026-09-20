@@ -1,0 +1,7 @@
+.text-tip + .text-tip {
+  margin-top: 10rpx;
+}
+
+.row + .row {
+  border-top: 2rpx solid #f2f3f5;
+}

@@ -1,0 +1,123 @@
+<view class="container">
+  <!-- 选图与编辑合并：没图时整块可点 -->
+  <view class="card">
+    <view class="canvas-wrap" style="height: {{displayH}}px;" bindtap="onTapStage">
+      <canvas
+        wx:if="{{hasImage}}"
+        type="2d"
+        id="editCanvas"
+        class="edit-canvas"
+        style="width: {{displayW}}px; height: {{displayH}}px;"
+        bindtouchstart="onTouchStart"
+        bindtouchmove="onTouchMove"
+        bindtouchend="onTouchEnd"
+        bindtouchcancel="onTouchEnd"
+      ></canvas>
+      <view wx:elif="{{working}}" class="loading-state">
+        <view class="loading-spinner"></view>
+        <view class="loading-text">正在处理照片…</view>
+      </view>
+      <view wx:else class="empty">
+        <view class="empty-icon">＋</view>
+        <view>点击选择照片</view>
+      </view>
+    </view>
+    <view wx:if="{{hasImage}}" class="text-tip tip">
+      点一下选中贴纸，拖动可以移动，两根手指能放大和转动。
+    </view>
+    <view wx:if="{{hasImage}}" class="text-tip tip">{{imageTip}}</view>
+    <view wx:else class="text-tip tip">{{advice}}</view>
+  </view>
+
+  <!-- 贴纸库常驻：没选照片也能先挑好 -->
+  <view class="card">
+    <view class="card-title">贴纸库</view>
+    <view class="segment">
+      <view
+        wx:for="{{stickerGroups}}"
+        wx:key="group"
+        class="segment-item {{groupIndex === index ? 'active' : ''}}"
+        data-index="{{index}}"
+        bindtap="onSwitchGroup"
+      >{{item.group}}</view>
+    </view>
+    <view class="sticker-grid">
+      <view
+        class="sticker-cell"
+        wx:for="{{stickerGroups[groupIndex].items}}"
+        wx:key="*this"
+        data-emoji="{{item}}"
+        bindtap="onAddSticker"
+      >{{item}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{selectedId}}" class="card">
+    <view class="card-title">调整贴纸</view>
+    <slider-control
+      label="大小"
+      value="{{stickerScale}}"
+      min="0.3"
+      max="3"
+      step="0.1"
+      precision="{{1}}"
+      unit="x"
+      data-field="scale"
+      bindchanging="onSliderChanging"
+      bindchange="onSliderChange"
+    />
+    <slider-control
+      label="旋转"
+      value="{{stickerRotation}}"
+      min="-180"
+      max="180"
+      step="1"
+      unit="°"
+      data-field="rotation"
+      bindchanging="onSliderChanging"
+      bindchange="onSliderChange"
+    />
+    <slider-control
+      label="透明度"
+      value="{{stickerOpacity}}"
+      min="10"
+      max="100"
+      step="1"
+      unit="%"
+      data-field="opacity"
+      bindchanging="onSliderChanging"
+      bindchange="onSliderChange"
+    />
+    <view class="btn-row action-row">
+      <view class="btn btn-plain" data-action="bottom" bindtap="onReorder">移到最下</view>
+      <view class="btn btn-plain" data-action="top" bindtap="onReorder">移到最上</view>
+      <view class="btn btn-plain" data-action="delete" bindtap="onReorder">删掉</view>
+    </view>
+    <view class="text-tip tip">贴纸重叠时，「移到最上」的那个会盖住其他贴纸。</view>
+  </view>
+
+  <!-- 操作按钮常驻 -->
+  <view class="card">
+    <view class="btn-row">
+      <view
+        class="btn btn-plain {{stickers.length ? '' : 'btn-disabled'}}"
+        bindtap="onClear"
+      >全部删掉</view>
+      <view class="btn btn-plain" bindtap="onRepick">{{hasImage ? '换一张照片' : '选择照片'}}</view>
+    </view>
+    <view
+      class="btn btn-primary export-btn {{hasImage && !exporting ? '' : 'btn-disabled'}}"
+      bindtap="onExport"
+    >保存到相册</view>
+    <view class="text-tip tip" wx:if="{{!hasImage && stickers.length}}">
+      已选 {{stickers.length}} 个贴纸，选好照片就能看到。
+    </view>
+    <view class="text-tip tip" wx:elif="{{stickers.length}}">照片上有 {{stickers.length}} 个贴纸。</view>
+    <view class="text-tip tip" wx:elif="{{hasImage}}">还没加贴纸，点上面的表情加一个吧。</view>
+  </view>
+
+  <!-- 屏幕外的工作画布：导出在这里画，用户看不到 -->
+  <canvas wx:if="{{hasImage}}" type="2d" id="workCanvas" class="work-canvas"></canvas>
+
+  <view class="safe-bottom" />
+</view>

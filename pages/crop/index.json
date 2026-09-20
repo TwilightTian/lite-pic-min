@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "图片裁剪",
+  "usingComponents": {
+    "slider-control": "/components/SliderControl/index"
+  }
+}

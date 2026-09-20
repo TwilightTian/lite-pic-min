@@ -1,0 +1,35 @@
+<view class="page">
+  <view class="hero">
+    <view class="hero-title">轻图九宫格</view>
+    <view class="hero-desc">不用登录 · 不上传照片 · 保存出来的图没有水印</view>
+  </view>
+
+  <view class="grid">
+    <view
+      class="feature"
+      wx:for="{{features}}"
+      wx:key="key"
+      hover-class="feature-hover"
+      bindtap="onTapFeature"
+      data-key="{{item.key}}"
+    >
+      <view class="feature-icon" style="background: {{item.bg}}">{{item.icon}}</view>
+      <view class="feature-title">{{item.title}}</view>
+      <view class="feature-desc">{{item.desc}}</view>
+    </view>
+  </view>
+
+  <view class="tips card">
+    <view class="tips-title">使用说明</view>
+    <view class="text-tip">1. 选好照片就能直接调效果，边调边看。</view>
+    <view class="text-tip">2. 照片都在你自己手机上处理，不会上传到网上。</view>
+    <view class="text-tip">3. 保存时如果提示没权限，按提示开一下「保存到相册」就行。</view>
+    <view class="text-tip">4. 照片太大也没关系，会自动缩小后再处理。</view>
+  </view>
+
+  <view class="footer">
+    <text class="footer-link" bindtap="onTapAbout">关于与隐私说明</text>
+  </view>
+
+  <view class="safe-bottom" />
+</view>

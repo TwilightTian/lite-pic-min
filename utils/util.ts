@@ -1,0 +1,68 @@
+/**
+ * 通用小工具
+ */
+
+let seq = 0
+
+/** 生成简单唯一 id */
+export function uid(prefix = 'id'): string {
+  seq += 1
+  return `${prefix}_${Date.now().toString(36)}_${seq}`
+}
+
+/** 限制取值范围（NaN / Infinity 一律回落到 min，避免把脏数据扩散出去） */
+export function clamp(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) return min
+  return Math.min(max, Math.max(min, value))
+}
+
+/** 角度转弧度 */
+export function toRadian(degree: number): number {
+  return (degree * Math.PI) / 180
+}
+
+/** 旋转角度归一化到 -180 ~ 180 */
+export function normalizeRotation(angle: number): number {
+  let a = angle % 360
+  if (a > 180) a -= 360
+  if (a < -180) a += 360
+  return Math.round(a)
+}
+
+/** 两指间距 */
+export function distanceOf(a: { x: number; y: number }, b: { x: number; y: number }): number {
+  const dx = a.x - b.x
+  const dy = a.y - b.y
+  return Math.sqrt(dx * dx + dy * dy)
+}
+
+/** 两指连线角度（度） */
+export function angleOf(a: { x: number; y: number }, b: { x: number; y: number }): number {
+  return (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI
+}
+
+/** 三元组式提示 */
+export function toast(title: string, icon: 'none' | 'success' | 'error' = 'none'): void {
+  wx.showToast({ title, icon, duration: 1800 })
+}
+
+/** 错误提示（统一入口，便于以后接入更细致的错误码处理） */
+export function toastError(err: unknown, fallback = '操作失败，请重试'): void {
+  const msg = err instanceof Error ? err.message : typeof err === 'string' ? err : ''
+  console.warn('[lite-pic]', err)
+  let title = fallback
+  if (msg) {
+    if (/cancel/i.test(msg)) return // 用户主动取消，不提示
+    title = msg
+  }
+  if (title.length > 14) title = `${title.slice(0, 13)}…`
+  wx.showToast({ title, icon: 'none', duration: 2000 })
+}
+
+export function showLoading(title = '处理中'): void {
+  wx.showLoading({ title, mask: true })
+}
+
+export function hideLoading(): void {
+  wx.hideLoading()
+}

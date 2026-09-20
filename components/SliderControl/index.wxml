@@ -1,0 +1,19 @@
+<view class="ctrl {{disabled ? 'ctrl-disabled' : ''}}">
+  <view class="ctrl-head">
+    <text class="ctrl-label">{{label}}</text>
+    <text class="ctrl-value">{{display}}{{unit}}</text>
+  </view>
+  <slider
+    class="ctrl-slider"
+    value="{{value}}"
+    min="{{min}}"
+    max="{{max}}"
+    step="{{step}}"
+    disabled="{{disabled}}"
+    activeColor="#07c160"
+    backgroundColor="#e6e8eb"
+    block-size="20"
+    bindchanging="onChanging"
+    bindchange="onChange"
+  />
+</view>

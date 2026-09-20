@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "水印添加",
+  "usingComponents": {
+    "slider-control": "/components/SliderControl/index"
+  }
+}
