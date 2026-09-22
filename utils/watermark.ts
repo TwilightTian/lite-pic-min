@@ -6,7 +6,7 @@
  * 文字 / 图片水印都走同一套定位逻辑。
  */
 import { WatermarkConfig, WatermarkPosition } from '../types/index'
-import { CanvasImage, Ctx2D, drawImageFit } from './canvas'
+import { CanvasImage, Ctx2D, canvasFont, drawImageFit } from './canvas'
 import { clamp, toRadian } from './util'
 
 /** 图片水印是否需要先加载水印图 */
@@ -75,7 +75,7 @@ export function measureTextWatermark(
   let width = fontSize
   if (text) {
     ctx.save()
-    ctx.font = `${config.bold ? 'bold ' : ''}${fontSize}px sans-serif`
+    ctx.font = canvasFont(fontSize, config.bold)
     width = ctx.measureText(text).width || fontSize
     ctx.restore()
   }
@@ -160,7 +160,7 @@ function drawTextWatermark(ctx: Ctx2D, config: WatermarkConfig, cw: number, ch: 
     const half = diagonal / 2
     paintWithTransform(ctx, cw / 2, ch / 2, config.rotation, config.opacity, () => {
       ctx.fillStyle = config.color
-      ctx.font = `${config.bold ? 'bold ' : ''}${fontSize}px sans-serif`
+      ctx.font = canvasFont(fontSize, config.bold)
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       for (let y = -half; y <= half; y += stepY) {
@@ -175,7 +175,7 @@ function drawTextWatermark(ctx: Ctx2D, config: WatermarkConfig, cw: number, ch: 
   const center = resolveCenter(config, textW, textH, cw, ch)
   paintWithTransform(ctx, center.x, center.y, config.rotation, config.opacity, () => {
     ctx.fillStyle = config.color
-    ctx.font = `${config.bold ? 'bold ' : ''}${fontSize}px sans-serif`
+    ctx.font = canvasFont(fontSize, config.bold)
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(text, 0, 0)

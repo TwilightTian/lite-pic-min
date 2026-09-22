@@ -4,20 +4,35 @@
     <view class="hero-desc">不用登录 · 不上传照片 · 保存出来的图没有水印</view>
   </view>
 
-  <view class="grid">
+  <!-- 卡片的位置和尺寸由 JS 算好写进行内样式，长按任意一张可以拖动排序 -->
+  <view class="grid" style="height: {{gridHeight}}px;">
     <view
-      class="feature"
+      class="feature {{item.dragging ? 'feature-dragging' : ''}}"
       wx:for="{{features}}"
       wx:key="key"
-      hover-class="feature-hover"
-      bindtap="onTapFeature"
+      hover-class="{{dragMode ? 'none' : 'feature-hover'}}"
+      hover-stay-time="80"
+      style="{{item.style}}"
       data-key="{{item.key}}"
+      data-index="{{index}}"
+      bindtap="onTapFeature"
+      bindlongpress="onLongPressCard"
+      bindtouchmove="onCardTouchMove"
+      bindtouchend="onCardTouchEnd"
+      bindtouchcancel="onCardTouchEnd"
     >
       <view class="feature-icon" style="background: {{item.bg}}">{{item.icon}}</view>
       <view class="feature-title">{{item.title}}</view>
       <view class="feature-desc">{{item.desc}}</view>
     </view>
   </view>
+
+  <!-- 这一格既是排序提示也是拖拽模式的工具栏（位置不变，切换时不跳） -->
+  <view wx:if="{{dragMode}}" class="drag-bar">
+    <text class="drag-text">按住卡片拖动，换到你顺手的位置</text>
+    <view class="drag-done" bindtap="onExitDrag">完成</view>
+  </view>
+  <view wx:else class="order-tip">长按卡片可以调整顺序</view>
 
   <view class="tips card">
     <view class="tips-title">使用说明</view>

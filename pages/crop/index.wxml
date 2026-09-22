@@ -8,10 +8,10 @@
         id="editCanvas"
         class="edit-canvas"
         style="width: {{displayW}}px; height: {{displayH}}px;"
-        bindtouchstart="onTouchStart"
-        bindtouchmove="onTouchMove"
-        bindtouchend="onTouchEnd"
-        bindtouchcancel="onTouchEnd"
+        catchtouchstart="onTouchStart"
+        catchtouchmove="onTouchMove"
+        catchtouchend="onTouchEnd"
+        catchtouchcancel="onTouchEnd"
       ></canvas>
       <view wx:elif="{{working}}" class="loading-state">
         <view class="loading-spinner"></view>
@@ -70,7 +70,7 @@
           min="20"
           max="100"
           step="1"
-          unit="%"
+          display="{{px.freeWidth + 'px'}}"
           data-field="freeWidth"
           bindchanging="onSliderChanging"
           bindchange="onSliderChange"
@@ -81,7 +81,7 @@
           min="20"
           max="100"
           step="1"
-          unit="%"
+          display="{{px.freeHeight + 'px'}}"
           data-field="freeHeight"
           bindchanging="onSliderChanging"
           bindchange="onSliderChange"

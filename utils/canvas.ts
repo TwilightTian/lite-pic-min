@@ -26,6 +26,13 @@ export const MAX_SOURCE_SIDE = 3600
 export const MAX_EXPORT_SIDE = 1080
 
 /**
+ * 画布四周要留出的空间（rpx，两侧合计）：页面 24 + 卡片 24 + `.canvas-wrap` 的 16。
+ * 各页按窗口宽度算预览尺寸时必须扣掉它，否则画布会顶到工作区边框、被 overflow 裁掉一条边
+ * （历史上九宫格预览就因为漏算卡片内边距，左右各被裁掉约 12px）。
+ */
+export const STAGE_RESERVED_RPX = (24 + 24 + 16) * 2
+
+/**
  * 画布上的触摸点
  * canvas 的 touch 事件在运行时带有相对画布左上角的 x / y（类型定义里没写，这里显式声明）
  */
@@ -123,7 +130,8 @@ export async function loadImage(canvas: CanvasNode, src: string): Promise<Canvas
   const img = await new Promise<CanvasImage>((resolve, reject) => {
     const image = canvas.createImage()
     image.onload = () => resolve(image)
-    image.onerror = () => reject(new Error('图片加载失败'))
+    // 带上路径尾部，方便定位是哪条路径解不了（压缩产物 / 原图 / getImageInfo 路径）
+    image.onerror = () => reject(new Error(`图片加载失败（${src.slice(-16)}）`))
     image.src = src
   })
 
@@ -154,6 +162,21 @@ export function clearCanvas(ctx: Ctx2D, width: number, height: number): void {
   ctx.clearRect(0, 0, width, height)
 }
 
+/* ------------------------- 画布字体 ------------------------- */
+
+/**
+ * 画布文字用的字体栈：和 app.wxss 里页面的默认字体一字不差（微信默认字体）。
+ * canvas 的 font 必须写字体名，写 sans-serif 在 iOS 上会落到 Helvetica，
+ * 和页面文字（-apple-system → SF Pro / PingFang）观感不一致，所以把同一套字体栈搬过来。
+ */
+export const CANVAS_FONT_FAMILY =
+  '-apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Helvetica, sans-serif'
+
+/** 拼 canvas 的 font 字符串（字号取整，避免小数导致部分机型回退到默认字号） */
+export function canvasFont(size: number, bold = false): string {
+  return `${bold ? 'bold ' : ''}${Math.round(size)}px ${CANVAS_FONT_FAMILY}`
+}
+
 export interface FitRect {
   sx: number
   sy: number
@@ -181,10 +204,27 @@ export function computeFitRect(
 ): FitRect {
   const iw = Math.max(1, imgWidth)
   const ih = Math.max(1, imgHeight)
-  const scale = mode === 'cover' ? Math.max(dw / iw, dh / ih) : Math.min(dw / iw, dh / ih)
-  const renderW = iw * scale
-  const renderH = ih * scale
-  // 以源图为准的裁剪区域
+
+  // contain：整张图完整放进目标区域，居中留白
+  if (mode === 'contain') {
+    const scale = Math.min(dw / iw, dh / ih)
+    const renderW = iw * scale
+    const renderH = ih * scale
+    return {
+      sx: 0,
+      sy: 0,
+      sw: iw,
+      sh: ih,
+      dx: dx + (dw - renderW) / 2,
+      dy: dy + (dh - renderH) / 2,
+      dw: renderW,
+      dh: renderH,
+    }
+  }
+
+  // cover：把源图按「与目标区域同比例」居中裁一块，再铺满目标区域。
+  // 注意源矩形与目标矩形必须是同一个缩放比，否则图片会被拉扁。
+  const scale = Math.max(dw / iw, dh / ih)
   const sw = Math.min(iw, dw / scale)
   const sh = Math.min(ih, dh / scale)
   return {
@@ -192,10 +232,10 @@ export function computeFitRect(
     sy: (ih - sh) / 2,
     sw,
     sh,
-    dx: dx + (dw - renderW) / 2,
-    dy: dy + (dh - renderH) / 2,
-    dw: renderW,
-    dh: renderH,
+    dx,
+    dy,
+    dw,
+    dh,
   }
 }
 

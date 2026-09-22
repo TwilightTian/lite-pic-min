@@ -1,7 +1,7 @@
 <view class="ctrl {{disabled ? 'ctrl-disabled' : ''}}">
   <view class="ctrl-head">
     <text class="ctrl-label">{{label}}</text>
-    <text class="ctrl-value">{{display}}{{unit}}</text>
+    <text class="ctrl-value">{{text}}{{unit}}</text>
   </view>
   <slider
     class="ctrl-slider"

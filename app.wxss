@@ -72,11 +72,11 @@ page {
   flex: 1;
 }
 
-/* 空状态 */
+/* 空状态（画布区里，底色是灰的，字色比别处深一点才看得清） */
 .empty {
   padding: 120rpx 0;
   text-align: center;
-  color: #8a9099;
+  color: #6f7680;
 }
 
 .empty-icon {
@@ -118,15 +118,31 @@ page {
   }
 }
 
-/* 画布容器 */
+/*
+ * 画布容器（工作区）。
+ * 用户要一眼看出「这块是能点的、能拖的」，所以做成比页面底色深一点的凹陷区域：
+ * 灰底 + 明确边框 + 内阴影，画布四周再留一圈衬边（padding）。
+ * 注意：padding 变了要同步 utils/canvas.ts 的 STAGE_RESERVED_RPX，
+ * 各页按它扣掉留白算画布尺寸，否则画布会顶到边框被裁掉。
+ */
 .canvas-wrap {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fff;
-  border-radius: 20rpx;
+  padding: 16rpx;
+  background: #e8ebef;
+  border: 2rpx solid #d2d7de;
+  border-radius: 24rpx;
+  box-shadow: inset 0 2rpx 10rpx rgba(0, 0, 0, 0.06);
   overflow: hidden;
+}
+
+/* 画布本身（照片）：浮在灰色工作区上，范围一眼可辨 */
+.edit-canvas {
+  display: block;
+  border-radius: 12rpx;
+  box-shadow: 0 4rpx 14rpx rgba(0, 0, 0, 0.12);
 }
 
 /*

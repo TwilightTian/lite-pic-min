@@ -41,6 +41,41 @@ export function angleOf(a: { x: number; y: number }, b: { x: number; y: number }
   return (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI
 }
 
+/* ------------------------- 档位选项 ------------------------- */
+
+/** 档位选项：key 是标识，ratio 是它对应的比例值；pages 层还会带 label 给用户看 */
+export interface RatioOption {
+  key: string
+  ratio: number
+}
+
+/** 按下标取比例值（滑块就是按下标走的，越界夹到两端） */
+export function optionRatioAt(options: RatioOption[], index: number): number {
+  if (!options.length) return 0
+  return options[clamp(Math.round(index), 0, options.length - 1)].ratio
+}
+
+/**
+ * 比例值反查最接近的档位下标。
+ * 手势能把值改成任意比例（比如双指缩放字号），这时滑块也要停在一个档位上，
+ * 所以按「最接近」匹配，不要求完全相等。下标既给滑块定位，也用来取档位文字。
+ */
+export function nearestOptionIndex(options: RatioOption[], ratio: number): number {
+  if (!options.length) return 0
+  let best = 0
+  let bestDiff = Infinity
+  for (let i = 0; i < options.length; i += 1) {
+    const diff = Math.abs(options[i].ratio - ratio)
+    if (diff < bestDiff) {
+      best = i
+      bestDiff = diff
+    }
+  }
+  return best
+}
+
+/* ------------------------- 提示 ------------------------- */
+
 /** 三元组式提示 */
 export function toast(title: string, icon: 'none' | 'success' | 'error' = 'none'): void {
   wx.showToast({ title, icon, duration: 1800 })

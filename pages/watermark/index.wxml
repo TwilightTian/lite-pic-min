@@ -8,10 +8,10 @@
         id="editCanvas"
         class="edit-canvas"
         style="width: {{displayW}}px; height: {{displayH}}px;"
-        bindtouchstart="onTouchStart"
-        bindtouchmove="onTouchMove"
-        bindtouchend="onTouchEnd"
-        bindtouchcancel="onTouchEnd"
+        catchtouchstart="onTouchStart"
+        catchtouchmove="onTouchMove"
+        catchtouchend="onTouchEnd"
+        catchtouchcancel="onTouchEnd"
       ></canvas>
       <view wx:elif="{{working}}" class="loading-state">
         <view class="loading-spinner"></view>
@@ -71,14 +71,13 @@
       </view>
       <slider-control
         label="文字大小"
-        value="{{pct.fontSize}}"
-        min="2"
-        max="20"
+        value="{{fontIndex}}"
+        min="0"
+        max="{{fontOptions.length - 1}}"
         step="1"
-        unit="%"
-        data-field="fontSize"
-        bindchanging="onSliderChanging"
-        bindchange="onSliderChange"
+        display="{{fontLabel}}"
+        bindchanging="onFontSizeChanging"
+        bindchange="onFontSizeChange"
       />
       <view class="switch-row">
         <text class="row-label">文字加粗</text>
@@ -100,7 +99,7 @@
         min="5"
         max="80"
         step="1"
-        unit="%"
+        display="{{px.imageScale + 'px'}}"
         data-field="imageScale"
         bindchanging="onSliderChanging"
         bindchange="onSliderChange"
@@ -144,7 +143,7 @@
         min="0"
         max="20"
         step="1"
-        unit="%"
+        display="{{px.padding + 'px'}}"
         data-field="padding"
         bindchanging="onSliderChanging"
         bindchange="onSliderChange"

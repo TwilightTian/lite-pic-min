@@ -1,0 +1,291 @@
+<view class="container">
+  <!-- 画布常驻顶部：切 Tab 时不动，也不用滚回去看效果 -->
+  <view class="card">
+    <view class="canvas-wrap" style="height: {{displayH}}px;" bindtap="onTapStage">
+      <!-- 用 catch 而不是 bind：拖动时不让事件冒泡到页面，否则会跟着页面一起滚 -->
+      <canvas
+        wx:if="{{hasBg}}"
+        type="2d"
+        id="editCanvas"
+        class="edit-canvas"
+        style="width: {{displayW}}px; height: {{displayH}}px;"
+        catchtouchstart="onTouchStart"
+        catchtouchmove="onTouchMove"
+        catchtouchend="onTouchEnd"
+        catchtouchcancel="onTouchEnd"
+      ></canvas>
+      <view wx:elif="{{working}}" class="loading-state">
+        <view class="loading-spinner"></view>
+        <view class="loading-text">正在处理底图…</view>
+      </view>
+      <view wx:else class="empty">
+        <view class="empty-icon">＋</view>
+        <view>点击选择底图</view>
+        <view class="empty-sub">选好后可以叠一张抠好的人像上去</view>
+      </view>
+    </view>
+
+    <view wx:if="{{hasBg && hasPortrait}}" class="text-tip tip">
+      {{editMode === 'pen' ? (penTool === 'eraser' ? '在被缝挡住的地方拖一下，红色标出的部分会被擦掉。' : '沿着白缝拖一下，这段缝就会穿到人像前面。') : '拖动人像换位置，两指可以缩放和旋转。人像可以拖出画框，效果更立体。'}}
+    </view>
+    <view wx:elif="{{hasBg}}" class="text-tip tip">
+      还没有人像。加一张抠好的透明人像，白缝就会被人像挡住，立体感就出来了。
+    </view>
+    <view wx:else class="text-tip tip">{{advice}}</view>
+
+    <!-- 快捷操作条：就在画布下面，不用上下滚动 -->
+    <block wx:if="{{hasBg && hasPortrait}}">
+      <view class="quick-bar">
+        <view
+          class="quick {{editMode === 'portrait' ? 'active' : ''}}"
+          data-mode="portrait"
+          bindtap="onSwitchMode"
+        >摆人像</view>
+        <view
+          class="quick {{editMode === 'pen' ? 'active' : ''}}"
+          data-mode="pen"
+          bindtap="onSwitchMode"
+        >画穿透</view>
+      </view>
+
+      <view wx:if="{{editMode === 'pen'}}" class="quick-bar">
+        <view
+          class="quick quick-brush {{penTool === 'brush' ? 'active' : ''}}"
+          data-tool="brush"
+          bindtap="onPickPenTool"
+        >✎ 画笔</view>
+        <view
+          class="quick quick-eraser {{penTool === 'eraser' ? 'active' : ''}}"
+          data-tool="eraser"
+          bindtap="onPickPenTool"
+        >⌫ 橡皮擦</view>
+        <view class="quick" bindtap="onUndoPen">撤销</view>
+        <view class="quick" bindtap="onResetView">{{viewScale === 1 ? '放大' : '放大 ' + viewScale + 'x'}}</view>
+      </view>
+
+      <view wx:if="{{editMode === 'pen'}}" class="text-tip tip">
+        已画 {{segmentCount}} 段；两指可以放大画布，放大后再画更准。
+      </view>
+    </block>
+  </view>
+
+  <!-- 设置面板分 Tab，避免一屏到底要来回滚 -->
+  <view class="tabs">
+    <view class="tab {{tab === 'bg' ? 'active' : ''}}" data-tab="bg" bindtap="onSwitchTab">底图</view>
+    <!-- 没选底图时人像 / 文字先置灰，点了会提示先选底图 -->
+    <view
+      class="tab {{hasBg ? '' : 'tab-locked'}} {{tab === 'portrait' ? 'active' : ''}}"
+      data-tab="portrait"
+      bindtap="onSwitchTab"
+    >人像</view>
+    <view
+      class="tab {{hasBg ? '' : 'tab-locked'}} {{tab === 'text' ? 'active' : ''}}"
+      data-tab="text"
+      bindtap="onSwitchTab"
+    >顶部文字</view>
+  </view>
+
+  <!-- Tab：底图 -->
+  <view wx:if="{{tab === 'bg'}}" class="card">
+    <view class="row">
+      <text class="row-label">底图方式</text>
+    </view>
+    <view class="chip-row">
+      <view
+        class="chip {{gridMode === 'single' ? 'active' : ''}}"
+        data-mode="single"
+        bindtap="onPickMode"
+      >一张照片切成 9 格</view>
+      <view
+        class="chip {{gridMode === 'nine' ? 'active' : ''}}"
+        data-mode="nine"
+        bindtap="onPickMode"
+      >选 9 张图</view>
+    </view>
+
+    <view class="btn-row">
+      <view class="btn btn-plain" bindtap="onChooseBg">
+        {{hasBg ? '重选底图' : (gridMode === 'nine' ? '选择 9 张图' : '选择照片')}}
+      </view>
+    </view>
+    <view wx:if="{{gridTip}}" class="text-tip tip">{{gridTip}}</view>
+    <view wx:else class="text-tip tip">
+      选好底图后，上面的「人像」和「顶部文字」就能用了。底图里最好不要有本人，人像单独叠上去更干净。
+    </view>
+
+    <view class="more-toggle" bindtap="onToggleMore">
+      <text class="more-title">更多设置（圆角 / 缝隙 / 白框）</text>
+      <text class="more-arrow">{{moreOpen ? '收起 ▴' : '展开 ▾'}}</text>
+    </view>
+
+    <block wx:if="{{moreOpen}}">
+      <view class="row">
+        <text class="row-label">格子边角</text>
+      </view>
+      <view class="chip-row">
+        <view
+          wx:for="{{cornerOptions}}"
+          wx:key="key"
+          class="chip {{corner === item.key ? 'active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="onPickCorner"
+        >{{item.label}}</view>
+      </view>
+      <slider-control
+        label="格子间距"
+        value="{{gapIndex}}"
+        min="0"
+        max="{{gapOptions.length - 1}}"
+        step="1"
+        display="{{gapLabel}}"
+        bindchanging="onGapChanging"
+        bindchange="onGapChange"
+      />
+      <slider-control
+        label="白色外框"
+        value="{{outerIndex}}"
+        min="0"
+        max="{{outerOptions.length - 1}}"
+        step="1"
+        display="{{outerLabel}}"
+        bindchanging="onOuterChanging"
+        bindchange="onOuterChange"
+      />
+      <view class="text-tip tip">外白框就是「画框」，太小立体感会弱一些。</view>
+    </block>
+  </view>
+
+  <!-- Tab：人像 -->
+  <view wx:if="{{tab === 'portrait'}}" class="card">
+    <view class="btn-row">
+      <view class="btn btn-plain" bindtap="onChoosePortrait">
+        {{hasPortrait ? '换一张人像' : '选择人像图'}}
+      </view>
+    </view>
+
+    <block wx:if="{{hasPortrait}}">
+      <block wx:if="{{editMode === 'pen'}}">
+        <view class="text-tip tip">
+          画笔 / 橡皮擦 / 撤销 / 放大都在画布下方那条工具栏里，随时可切。
+        </view>
+        <view class="text-tip tip">已经画了 {{segmentCount}} 段穿透。</view>
+        <view class="btn-row">
+          <view class="btn btn-plain btn-danger" bindtap="onClearPen">清空穿透</view>
+        </view>
+      </block>
+
+      <block wx:else>
+        <slider-control
+          label="人像大小"
+          value="{{portraitScale}}"
+          min="{{portraitMin}}"
+          max="{{portraitMax}}"
+          step="1"
+          display="{{portraitPx + 'px'}}"
+          bindchanging="onPortraitScaleChanging"
+          bindchange="onPortraitScaleChange"
+        />
+        <slider-control
+          label="人像角度"
+          value="{{portraitRotation}}"
+          min="-180"
+          max="180"
+          step="1"
+          unit="°"
+          bindchanging="onPortraitRotationChanging"
+          bindchange="onPortraitRotationChange"
+        />
+        <view class="btn-row">
+          <view class="btn btn-plain" bindtap="onResetPortrait">人像复位</view>
+          <view class="btn btn-plain btn-danger" bindtap="onRemovePortrait">移除人像</view>
+        </view>
+      </block>
+    </block>
+
+    <block wx:else>
+      <view class="text-tip tip">
+        人像必须是一张「透明背景」的图：手机相册里长按人物 → 拷贝/存储图像（iOS 16+ 自带抠图），或用任意抠图 App 导出 PNG。
+      </view>
+      <view class="text-tip tip">
+        加上人像后：它盖住白缝 = 人在网格前面；再用「画穿透」让白缝从人像身上穿过去几道，一前一后才有立体感。
+      </view>
+    </block>
+  </view>
+
+  <!-- Tab：顶部文字 -->
+  <view wx:if="{{tab === 'text'}}" class="card">
+    <view class="row">
+      <text class="row-label">在图片顶部加一行字</text>
+      <switch checked="{{textEnabled}}" color="#07c160" bindchange="onToggleText" />
+    </view>
+
+    <block wx:if="{{textEnabled}}">
+      <!-- 用 textarea 才能换行；auto-height 让它跟着行数长高 -->
+      <textarea
+        class="text-input"
+        placeholder="例如：have a nice day."
+        placeholder-class="text-input-tip"
+        value="{{textValue}}"
+        maxlength="30"
+        auto-height
+        bindinput="onTextInput"
+      />
+
+      <view class="row">
+        <text class="row-label">颜色</text>
+      </view>
+      <view class="color-row">
+        <view
+          wx:for="{{textColors}}"
+          wx:key="*this"
+          class="color-dot {{textColor === item ? 'active' : ''}}"
+          style="background: {{item}}"
+          data-color="{{item}}"
+          bindtap="onPickTextColor"
+        />
+      </view>
+
+      <view class="row">
+        <text class="row-label">对齐</text>
+      </view>
+      <view class="chip-row">
+        <view
+          wx:for="{{textAligns}}"
+          wx:key="key"
+          class="chip {{textAlign === item.key ? 'active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="onPickTextAlign"
+        >{{item.label}}</view>
+      </view>
+
+      <slider-control
+        label="文字大小"
+        value="{{textSizeIndex}}"
+        min="0"
+        max="{{textSizeOptions.length - 1}}"
+        step="1"
+        display="{{textSizeLabel}}"
+        bindchanging="onTextSizeChanging"
+        bindchange="onTextSizeChange"
+      />
+      <view class="text-tip tip">文字可以换行；加字后画布会变高，和九宫格一起存进同一张图。</view>
+    </block>
+    <view wx:else class="text-tip tip">
+      打开开关就能在图片顶部写字（可以换行，比如日期、心情），和九宫格一起保存成一张图。
+    </view>
+  </view>
+
+  <!-- 给底部固定按钮条留位置 -->
+  <view class="bottom-space" />
+
+  <!-- 屏幕外的工作画布：图片加载与导出都在这里做，用户看不到 -->
+  <canvas type="2d" id="workCanvas" class="work-canvas"></canvas>
+</view>
+
+<!-- 底部固定操作条：任何时候都能保存 -->
+<view class="bottom-bar">
+  <view
+    class="btn btn-primary {{hasBg && !exporting ? '' : 'btn-disabled'}}"
+    bindtap="onExport"
+  >保存到相册</view>
+</view>

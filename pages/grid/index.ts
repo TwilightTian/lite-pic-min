@@ -13,12 +13,20 @@ import {
   MAX_CANVAS_SIDE,
   MAX_SOURCE_SIDE,
   MAX_TILE_SIDE,
+  STAGE_RESERVED_RPX,
   exportCanvas,
   getCanvasNode,
-  loadImage,
   setCanvasSize,
 } from '../../utils/canvas'
-import { PreparedImage, chooseImage, prepareImage, saveAllToAlbum, saveToAlbum } from '../../utils/image'
+import {
+  PreparedImage,
+  chooseImage,
+  describeImageSize,
+  loadPrepared,
+  prepareImage,
+  saveAllToAlbum,
+  saveToAlbum,
+} from '../../utils/image'
 import {
   GridLayout,
   computeGridLayout,
@@ -74,8 +82,10 @@ Page({
 
   onLoad() {
     const win = wx.getWindowInfo()
-    const side = Math.floor(Math.min(win.windowWidth - win.windowWidth * 0.064, 420))
-    this.setData({ displaySide: side })
+    // 扣掉页面 + 卡片 + 画布外框的留白，画布才不会被工作区边框裁掉
+    const available = win.windowWidth - STAGE_RESERVED_RPX * (win.windowWidth / 750)
+    // 420 是平板上的上限，别让画布太大
+    this.setData({ displaySide: Math.floor(Math.min(available, 420)) })
   },
 
   /* -------------------- 画布 -------------------- */
@@ -135,7 +145,7 @@ Page({
 
       // 用工作画布创建图片对象，不受预览画布显示状态影响
       const work = await this.ensureWorkCanvas()
-      const img = await loadImage(work.canvas, prepared.src)
+      const { image: img } = await loadPrepared(work.canvas, prepared)
       this.image = img
       await this.renderView()
       this.updateImageTip()
@@ -158,10 +168,7 @@ Page({
   updateImageTip() {
     const prepared = this.prepared
     if (!prepared) return
-    const imageTip = prepared.scaled
-      ? `照片有点大，已自动缩小到 ${prepared.width}×${prepared.height} 再处理`
-      : `照片 ${prepared.width}×${prepared.height}，可以直接处理`
-    this.setData({ imageTip })
+    this.setData({ imageTip: describeImageSize(prepared) })
   },
 
   /* -------------------- 视图绘制 -------------------- */

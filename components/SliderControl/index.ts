@@ -14,15 +14,20 @@ Component({
     /** 数值展示的小数位 */
     precision: { type: Number, value: 0 },
     disabled: { type: Boolean, value: false },
+    /**
+     * 要显示成具体数值（如 "29px"）时由页面算好传进来，传了就盖掉按 value 算的数字。
+     * 滑块本身仍按比例走，显示值取决于画布大小，所以只能页面侧算。
+     */
+    display: { type: String, value: '' },
   },
 
   data: {
-    display: '0',
+    text: '0',
   },
 
   observers: {
-    'value, precision': function (value: number, precision: number) {
-      this.setData({ display: Number(value || 0).toFixed(precision || 0) })
+    'value, precision, display': function (value: number, precision: number, display: string) {
+      this.setData({ text: display || Number(value || 0).toFixed(precision || 0) })
     },
   },
 

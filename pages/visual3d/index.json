@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "slider-control": "/components/SliderControl/index"
+  },
+  "navigationBarTitleText": "视觉 3D"
+}

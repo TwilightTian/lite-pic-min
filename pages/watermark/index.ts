@@ -4,12 +4,18 @@ import {
   CanvasImage,
   CanvasTouch,
   MAX_CANVAS_SIDE,
+  STAGE_RESERVED_RPX,
   computeCanvasSize,
   exportCanvas,
   getCanvasNode,
-  loadImage,
 } from '../../utils/canvas'
-import { chooseImage, prepareImage, saveToAlbum } from '../../utils/image'
+import {
+  chooseImage,
+  describeImageSize,
+  loadPrepared,
+  prepareImage,
+  saveToAlbum,
+} from '../../utils/image'
 import { drawWatermarkScene, getWatermarkBox, hitTestWatermark } from '../../utils/watermark'
 import { createWatermarkConfig, WatermarkConfig, WatermarkPosition } from '../../types/index'
 import {
@@ -17,7 +23,9 @@ import {
   clamp,
   distanceOf,
   hideLoading,
+  nearestOptionIndex,
   normalizeRotation,
+  optionRatioAt,
   showLoading,
   toast,
   toastError,
@@ -46,13 +54,32 @@ const POSITIONS: Array<{ key: WatermarkPosition }> = [
   { key: 'bottom-right' },
 ]
 
-/** 相对比例字段 → 百分比显示值 */
+/** 字号档位：让用户选小 / 标准 / 大，比拖滑块猜大小直观（比例相对画布宽度） */
+const FONT_SIZE_OPTIONS = [
+  { key: 'small', label: '小', ratio: 0.04 },
+  { key: 'normal', label: '标准', ratio: 0.06 },
+  { key: 'large', label: '大', ratio: 0.1 },
+]
+
+/** 相对比例字段 → 百分比显示值（透明度、水印大小、边距走滑块） */
 function toPct(wm: WatermarkConfig) {
   return {
-    fontSize: Math.round(wm.fontSize * 100),
     opacity: Math.round(wm.opacity * 100),
     padding: Math.round(wm.padding * 100),
     imageScale: Math.round(wm.imageScale * 100),
+  }
+}
+
+/**
+ * 相对比例字段 → 实际像素（显示用）。
+ * 画布宽度就是保存出来那张图的宽度，所以这些数值就是成品里的真实大小；
+ * 还没选照片时按最大处理宽度估一个，选完照片会按真实宽度重算。
+ */
+function toPx(wm: WatermarkConfig, canvasWidth: number) {
+  const cw = canvasWidth > 0 ? canvasWidth : MAX_CANVAS_SIDE
+  return {
+    imageScale: Math.round(wm.imageScale * cw),
+    padding: Math.round(wm.padding * cw),
   }
 }
 
@@ -63,7 +90,14 @@ Page({
     displayW: 300,
     displayH: 300,
     wm: createWatermarkConfig(),
+    /** 滑块用的百分比数值（透明度 / 水印大小 / 边距） */
     pct: toPct(createWatermarkConfig()),
+    /** 水印大小 / 边距的实际像素（显示用） */
+    px: toPx(createWatermarkConfig(), 0),
+    /** 字号档位：滑块按下标走，右侧显示档位文字（小 / 标准 / 大） */
+    fontIndex: 1,
+    fontLabel: '标准',
+    fontOptions: FONT_SIZE_OPTIONS,
     colors: COLORS,
     positions: POSITIONS,
     /** 是否使用自由位置（拖动过） */
@@ -101,8 +135,10 @@ Page({
 
   onLoad() {
     const win = wx.getWindowInfo()
+    // 扣掉页面 + 卡片 + 画布外框的留白，画布才不会被工作区边框裁掉
+    const available = win.windowWidth - STAGE_RESERVED_RPX * (win.windowWidth / 750)
     this.maxDisplay = {
-      width: Math.min(win.windowWidth - win.windowWidth * 0.11, 420),
+      width: Math.floor(Math.min(available, 420)),
       height: Math.max(240, win.windowHeight * 0.5),
     }
     this.setData({ displayW: this.maxDisplay.width, displayH: this.maxDisplay.width })
@@ -134,14 +170,23 @@ Page({
     drawWatermarkScene(handles.ctx, this.image, width, height, this.wmState, this.wmImage)
   },
 
+  /** 需要同步到视图层的字段（配置 / 滑块百分比 / 像素值 / 字号档位） */
+  viewFields(wm: WatermarkConfig) {
+    const fontIndex = nearestOptionIndex(FONT_SIZE_OPTIONS, wm.fontSize)
+    return {
+      wm: { ...wm },
+      pct: toPct(wm),
+      px: toPx(wm, this.canvasSize.width),
+      fontIndex,
+      fontLabel: FONT_SIZE_OPTIONS[fontIndex].label,
+      freeMode: wm.useFree,
+    }
+  },
+
   /** 手势中改完配置后重绘；syncView 为 true 时同步到视图层 */
   commitWm(syncView: boolean) {
     if (syncView) {
-      this.setData({
-        wm: { ...this.wmState },
-        pct: toPct(this.wmState),
-        freeMode: this.wmState.useFree,
-      })
+      this.setData(this.viewFields(this.wmState))
     }
     this.draw()
   },
@@ -177,7 +222,7 @@ Page({
       )
 
       const { canvas, ctx } = await this.ensureCanvas()
-      const img = await loadImage(canvas, prepared.src)
+      const { image: img } = await loadPrepared(canvas, prepared)
       this.image = img
 
       const size = computeCanvasSize(img.width, img.height)
@@ -199,12 +244,10 @@ Page({
       this.setData({
         displayW: Math.round(w),
         displayH: Math.round(h),
-        wm: { ...this.wmState },
-        pct: toPct(this.wmState),
+        // 画布宽度定了，里面的像素值按这张照片重算
+        ...this.viewFields(this.wmState),
         freeMode: false,
-        imageTip: prepared.scaled
-          ? `照片有点大，已自动缩小到 ${prepared.width}×${prepared.height} 再处理`
-          : `照片 ${prepared.width}×${prepared.height}，可以直接处理`,
+        imageTip: describeImageSize(prepared),
       })
 
       ctx && this.draw()
@@ -225,7 +268,8 @@ Page({
   /** 选择图片水印（此时可能还没选底图，先记下路径，有画布了再加载） */
   async onChooseWatermark() {
     try {
-      const paths = await chooseImage(1)
+      // 水印图常是透明 PNG（logo），必须拿原图，压缩会丢透明通道
+      const paths = await chooseImage(1, ['image'], { needAlpha: true })
       const path = paths[0]
       if (!path) return
       this.updateWatermark({ type: 'image', imageSrc: path })
@@ -246,7 +290,7 @@ Page({
     this.wmLoading = true
     try {
       const prepared = await prepareImage(wm.imageSrc, WATERMARK_IMAGE_MAX_SIDE)
-      this.wmImage = await loadImage(handles.canvas, prepared.src)
+      this.wmImage = (await loadPrepared(handles.canvas, prepared)).image
       this.wmLoadedSrc = wm.imageSrc
       this.draw()
     } catch (err) {
@@ -260,8 +304,17 @@ Page({
 
   updateWatermark(patch: Partial<WatermarkConfig>) {
     this.wmState = { ...this.wmState, ...patch }
-    this.setData({ wm: { ...this.wmState }, pct: toPct(this.wmState), freeMode: this.wmState.useFree })
+    this.setData(this.viewFields(this.wmState))
     this.scheduleDraw()
+  },
+
+  /** 字号滑块：小 / 标准 / 大（滑块值是档位下标） */
+  onFontSizeChanging(e: WechatMiniprogram.CustomEvent) {
+    this.updateWatermark({ fontSize: optionRatioAt(FONT_SIZE_OPTIONS, e.detail.value) })
+  },
+
+  onFontSizeChange(e: WechatMiniprogram.CustomEvent) {
+    this.updateWatermark({ fontSize: optionRatioAt(FONT_SIZE_OPTIONS, e.detail.value) })
   },
 
   /** 展开 / 收起更多设置 */
@@ -307,8 +360,6 @@ Page({
   /** 滑块数值 → 配置项 */
   patchFromSlider(field: string, value: number): Partial<WatermarkConfig> {
     switch (field) {
-      case 'fontSize':
-        return { fontSize: value / 100 }
       case 'opacity':
         return { opacity: value / 100 }
       case 'padding':

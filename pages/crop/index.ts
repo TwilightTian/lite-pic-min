@@ -4,11 +4,17 @@ import {
   CanvasImage,
   CanvasTouch,
   MAX_CANVAS_SIDE,
+  STAGE_RESERVED_RPX,
   computeCanvasSize,
   getCanvasNode,
-  loadImage,
 } from '../../utils/canvas'
-import { chooseImage, prepareImage, saveToAlbum } from '../../utils/image'
+import {
+  chooseImage,
+  describeImageSize,
+  loadPrepared,
+  prepareImage,
+  saveToAlbum,
+} from '../../utils/image'
 import { drawCropScene, exportCrop, normalizeCropConfig } from '../../utils/crop'
 import { createCropConfig, CropConfig, CropRatio } from '../../types/index'
 import { clamp, hideLoading, showLoading, toast, toastError } from '../../utils/util'
@@ -32,6 +38,20 @@ function toPct(crop: CropConfig) {
   }
 }
 
+/**
+ * 裁剪框比例 → 实际像素（显示用）。
+ * 与 utils/crop.computeCropBox 一致：宽按画布宽度、高按画布高度算，
+ * 也就是保存出来那张图的尺寸。没选照片时按最大处理尺寸估一个。
+ */
+function toPx(crop: CropConfig, cw: number, ch: number) {
+  const width = cw > 0 ? cw : MAX_CANVAS_SIDE
+  const height = ch > 0 ? ch : MAX_CANVAS_SIDE
+  return {
+    freeWidth: Math.round(clamp(crop.freeWidthPct, 0.2, 1) * width),
+    freeHeight: Math.round(clamp(crop.freeHeightPct, 0.2, 1) * height),
+  }
+}
+
 Page({
   data: {
     src: '',
@@ -40,6 +60,8 @@ Page({
     displayH: 300,
     crop: createCropConfig(),
     pct: toPct(createCropConfig()),
+    /** 裁剪框的实际像素（显示用） */
+    px: toPx(createCropConfig(), 0, 0),
     scaleDisplay: 1,
     ratios: RATIOS,
     imageTip: '',
@@ -73,8 +95,10 @@ Page({
 
   onLoad() {
     const win = wx.getWindowInfo()
+    // 扣掉页面 + 卡片 + 画布外框的留白，画布才不会被工作区边框裁掉
+    const available = win.windowWidth - STAGE_RESERVED_RPX * (win.windowWidth / 750)
     this.maxDisplay = {
-      width: Math.min(win.windowWidth - win.windowWidth * 0.11, 420),
+      width: Math.floor(Math.min(available, 420)),
       height: Math.max(240, win.windowHeight * 0.52),
     }
     this.setData({ displayW: this.maxDisplay.width, displayH: this.maxDisplay.width })
@@ -142,7 +166,7 @@ Page({
 
       const work = await this.ensureWorkCanvas()
       const { canvas } = await this.ensureCanvas()
-      const img = await loadImage(work.canvas, prepared.src)
+      const { image: img } = await loadPrepared(work.canvas, prepared)
       this.image = img
       this.imgRatio = img.width / Math.max(1, img.height)
 
@@ -161,9 +185,7 @@ Page({
       this.setData({
         displayW: Math.round(w),
         displayH: Math.round(h),
-        imageTip: prepared.scaled
-          ? `照片有点大，已自动缩小到 ${prepared.width}×${prepared.height} 再处理`
-          : `照片 ${prepared.width}×${prepared.height}，可以直接处理`,
+        imageTip: describeImageSize(prepared),
       })
 
       // 保留之前选好的比例和框大小，只把画面位置复位
@@ -179,7 +201,12 @@ Page({
         size.height,
         this.imgRatio
       )
-      this.setData({ crop: this.crop, pct: toPct(this.crop), scaleDisplay: this.crop.scale })
+      this.setData({
+        crop: this.crop,
+        pct: toPct(this.crop),
+        px: toPx(this.crop, size.width, size.height),
+        scaleDisplay: this.crop.scale,
+      })
       this.draw()
       hideLoading()
     } catch (err) {
@@ -207,6 +234,7 @@ Page({
       this.setData({
         crop: next,
         pct: toPct(next),
+        px: toPx(next, width, height),
         scaleDisplay: Math.round(next.scale * 100) / 100,
       })
     }
@@ -302,6 +330,7 @@ Page({
     this.setData({
       crop: this.crop,
       pct: toPct(this.crop),
+      px: toPx(this.crop, this.canvasSize.width, this.canvasSize.height),
       scaleDisplay: Math.round(this.crop.scale * 100) / 100,
     })
   },

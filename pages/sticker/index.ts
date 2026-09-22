@@ -4,13 +4,19 @@ import {
   CanvasImage,
   CanvasTouch,
   MAX_CANVAS_SIDE,
+  STAGE_RESERVED_RPX,
   computeCanvasSize,
   exportCanvas,
   getCanvasNode,
-  loadImage,
   setCanvasSize,
 } from '../../utils/canvas'
-import { chooseImage, prepareImage, saveToAlbum } from '../../utils/image'
+import {
+  chooseImage,
+  describeImageSize,
+  loadPrepared,
+  prepareImage,
+  saveToAlbum,
+} from '../../utils/image'
 import {
   BASE_STICKER_RATIO,
   STICKER_LIBRARY,
@@ -80,8 +86,10 @@ Page({
 
   onLoad() {
     const win = wx.getWindowInfo()
+    // 扣掉页面 + 卡片 + 画布外框的留白，画布才不会被工作区边框裁掉
+    const available = win.windowWidth - STAGE_RESERVED_RPX * (win.windowWidth / 750)
     this.maxDisplay = {
-      width: Math.min(win.windowWidth - win.windowWidth * 0.11, 420),
+      width: Math.floor(Math.min(available, 420)),
       height: Math.max(240, win.windowHeight * 0.48),
     }
     this.setData({ displayW: this.maxDisplay.width, displayH: this.maxDisplay.width })
@@ -151,7 +159,7 @@ Page({
 
       const work = await this.ensureWorkCanvas()
       const { canvas } = await this.ensureCanvas()
-      const img = await loadImage(work.canvas, prepared.src)
+      const { image: img } = await loadPrepared(work.canvas, prepared)
       this.image = img
 
       const size = computeCanvasSize(img.width, img.height)
@@ -171,9 +179,7 @@ Page({
       this.setData({
         displayW: Math.round(w),
         displayH: Math.round(h),
-        imageTip: prepared.scaled
-          ? `照片有点大，已自动缩小到 ${prepared.width}×${prepared.height} 再处理`
-          : `照片 ${prepared.width}×${prepared.height}，可以直接处理`,
+        imageTip: describeImageSize(prepared),
       })
       this.draw()
       hideLoading()

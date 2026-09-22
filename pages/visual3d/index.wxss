@@ -1,0 +1,175 @@
+.tip {
+  margin-top: 12rpx;
+}
+
+.edit-canvas {
+  display: block;
+  background: #ffffff;
+}
+
+.empty-sub {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #a8adb5;
+}
+
+/* 标签选择器（底图方式） */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.chip {
+  padding: 0 26rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  border-radius: 32rpx;
+  background: #f1f2f4;
+  color: #5b6169;
+  font-size: 26rpx;
+}
+
+.chip.active {
+  background: #07c160;
+  color: #fff;
+}
+
+.btn-danger {
+  color: #e34d59;
+}
+
+/* 设置面板 Tab */
+.tabs {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+
+.tab {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+  text-align: center;
+  border-radius: 20rpx;
+  background: #fff;
+  color: #5b6169;
+  font-size: 28rpx;
+}
+
+.tab.active {
+  background: #07c160;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* 还没选底图：人像 / 顶部文字先置灰（点了会提示，见 onSwitchTab） */
+.tab-locked {
+  opacity: 0.45;
+}
+
+/* 画布下方的快捷工具条 */
+.quick-bar {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.quick {
+  flex: 1;
+  height: 76rpx;
+  line-height: 76rpx;
+  text-align: center;
+  border-radius: 38rpx;
+  background: #f1f2f4;
+  color: #5b6169;
+  font-size: 27rpx;
+}
+
+.quick.active {
+  color: #fff;
+  font-weight: 600;
+  background: #07c160;
+}
+
+/* 两个工具用颜色区分：画笔绿、橡皮擦红 */
+.quick-brush.active {
+  background: #07c160;
+}
+
+.quick-eraser.active {
+  background: #e34d59;
+}
+
+/* 底部固定保存条 */
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 16rpx 24rpx 32rpx;
+  padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
+  background: #fff;
+  box-shadow: 0 -2rpx 16rpx rgba(0, 0, 0, 0.06);
+}
+
+.bottom-space {
+  height: 180rpx;
+}
+
+/* 顶部文字 */
+.text-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 84rpx;
+  padding: 16rpx 24rpx;
+  margin: 16rpx 0 8rpx;
+  background: #f6f7f8;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  line-height: 1.4;
+  color: #1f2328;
+}
+
+.text-input-tip {
+  color: #b6bbc2;
+}
+
+.color-row {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.color-dot {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  border: 2rpx solid #e6e8eb;
+  box-sizing: border-box;
+}
+
+.color-dot.active {
+  border: 6rpx solid #07c160;
+}
+
+/* 更多设置 */
+.more-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 88rpx;
+  margin-top: 12rpx;
+  border-top: 2rpx solid #f2f3f5;
+}
+
+.more-title {
+  font-size: 28rpx;
+  color: #1f2328;
+}
+
+.more-arrow {
+  font-size: 26rpx;
+  color: #8a9099;
+}

@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/grid/index",
     "pages/watermark/index",
+    "pages/visual3d/index",
     "pages/sticker/index",
     "pages/crop/index",
     "pages/about/index"
